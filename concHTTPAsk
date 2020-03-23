@@ -1,0 +1,153 @@
+import java.net.*;
+import java.io.*;
+import tcpclient.TCPClient;
+import java.nio.charset.StandardCharsets;
+
+public class ConcHTTPAsk extends Thread {
+
+private Socket client;
+
+public ConcHTTPAsk(Socket c) {
+  client = c;
+}
+
+String hostname = "";
+int port2 = 0;
+String ToServer = null;
+
+    public static void main( String[] args) throws IOException {
+
+        int port = Integer.parseInt(args[0]);
+
+        try {
+        ServerSocket serverSocket = new ServerSocket(port);
+        System.out.println("Server started waiting on connection on port: " + port + '\n');
+
+        while(true) {
+
+          ConcHTTPAsk myServer = new ConcHTTPAsk(serverSocket.accept());
+          System.out.println("Connection opened" + '\n');
+
+          Thread thread = new Thread(myServer);
+          thread.start();
+
+          }
+        }
+        catch(Exception IOException) {
+        }
+      }
+
+          public void run() {
+
+          try {
+          BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+          String get = in.readLine();
+
+          try {
+
+          String text = get.split(" ")[1];
+
+          String catchAskError = text.split("\\?")[0];
+
+          if (!catchAskError.equals("/ask")) {
+            String head = "HTTP/1.1 400 Bad Request\r\n\r\n";
+
+             DataOutputStream out = new DataOutputStream(client.getOutputStream());
+             out.writeBytes(head);
+
+             client.close();
+          }
+
+          String text2 = text.split("\\?")[1];
+
+          for(int i = 0; i < text2.split("&").length; i++) {
+
+            if (text2.split("&")[i].equals(text2.split("&")[i].split("=")[0])) {
+              String head = "HTTP/1.1 400 Bad Request\r\n\r\n";
+
+               DataOutputStream out = new DataOutputStream(client.getOutputStream());
+               out.writeBytes(head);
+
+               client.close();
+            }
+
+          String word2 = "";
+
+          String word = text2.split("&")[i];
+
+          if (word.equals("string=")) {
+            word2 = "";
+          }
+          else {
+          word2 = word.split("=")[1];
+        }
+          String catchError = word.split("=")[0];
+
+          if (i == 0) {
+            if (!catchError.equals("hostname")) {
+              String head = "HTTP/1.1 400 Bad Request\r\n\r\n";
+
+               DataOutputStream out = new DataOutputStream(client.getOutputStream());
+               out.writeBytes(head);
+
+               client.close();
+            }
+            hostname = word2;
+          }
+          if (i == 1) {
+            if (!catchError.equals("port")) {
+              String head = "HTTP/1.1 400 Bad Request\r\n\r\n";
+
+               DataOutputStream out = new DataOutputStream(client.getOutputStream());
+               out.writeBytes(head);
+
+               client.close();
+            }
+            port2 = Integer.parseInt(word2);
+          }
+          if (i == 2) {
+            if (!catchError.equals("string")) {
+              String head = "HTTP/1.1 400 Bad Request\r\n\r\n";
+
+               DataOutputStream out = new DataOutputStream(client.getOutputStream());
+               out.writeBytes(head);
+
+               client.close();
+            }
+            ToServer = word2;
+            }
+          }
+
+          String outputServer1 = TCPClient.askServer(hostname, port2, ToServer);
+
+          if (outputServer1 == null) {
+            String head = "HTTP/1.1 404 Not Found\r\n\r\n";
+
+             DataOutputStream out = new DataOutputStream(client.getOutputStream());
+            out.writeBytes(head);
+
+             client.close();
+          }
+
+          String head = "HTTP/1.1 200 OK\r\n\r\n";
+          StringBuilder outputServer = new StringBuilder();
+          outputServer.append(head);
+          outputServer.append(outputServer1);
+
+          System.out.println(outputServer.toString());
+
+          byte[] output = outputServer.toString().getBytes(StandardCharsets.UTF_8);
+
+          OutputStream out = client.getOutputStream();
+          out.write(output);
+
+          client.close();
+        }
+        catch(Exception ArrayOutOfBoundsException) {
+        }
+      }
+      catch(Exception IOException) {
+      }
+    }
+
+ }
